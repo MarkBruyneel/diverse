@@ -1,4 +1,4 @@
-# Publishers tool to be able to augment AIP data from Canvas with
+# Publishers tool to be able to augment data with
 # publisher data from Google using the Google API
 # Author: Mark Bruyneel
 #
@@ -33,7 +33,7 @@ runyear = str(datetime.today().year)
 now = str(datetime.now())
 nowt = time.time()
 
-logger.add(r'U:\Werk\OWO\AIP\AIP_Publisher_v2_Search.log', backtrace=True, diagnose=True, rotation="10 MB", retention="12 months")
+logger.add(r'U:\Werk\OWO\Publisher_v2_Search.log', backtrace=True, diagnose=True, rotation="10 MB", retention="12 months")
 @logger.catch()
 
 def main():
@@ -69,7 +69,7 @@ def main():
             ISBN_list.append(book)
 
     # Create an output folder if it doesn't exist
-    Path('U:\Werk\OWO\AIP\Output').mkdir(parents=True, exist_ok=True)
+    Path('U:\Werk\OWO\Output').mkdir(parents=True, exist_ok=True)
 
     # Get the data for each publication in the ISBN list
     Listsize = len(ISBN_list)
@@ -240,7 +240,7 @@ def main():
     Publisher_Book_Table.drop(Publisher_Book_Table[Publisher_Book_Table['Match_ISBN'] != Publisher_Book_Table['ISBN']].index, inplace=True)
 
     # Export end result
-    Publisher_Book_Table.to_csv(f'U:\Werk\OWO\AIP\Output\Book_list' + runday + '.txt', sep='\t' ,encoding='utf-8')
+    Publisher_Book_Table.to_csv(f'U:\Werk\OWO\Output\Book_list' + runday + '.txt', sep='\t' ,encoding='utf-8')
 
     # Logging of script run:
     end = str(datetime.now())
