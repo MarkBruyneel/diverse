@@ -1,4 +1,4 @@
-# Publishers tool to be able to augment AIP data from Canvas with
+# Publishers tool to be able to augment data with
 # publisher data from Google using the Google API
 # Author: Mark Bruyneel
 #
@@ -33,7 +33,7 @@ runyear = str(datetime.today().year)
 now = str(datetime.now())
 nowt = time.time()
 
-logger.add(r'U:\Werk\OWO\AIP\AIP_Publisher_Search.log', backtrace=True, diagnose=True, rotation="10 MB", retention="12 months")
+logger.add(r'U:\Werk\OWO\Publisher_Search.log', backtrace=True, diagnose=True, rotation="10 MB", retention="12 months")
 @logger.catch()
 
 def main():
@@ -67,7 +67,7 @@ def main():
             ISBN_list.append(book)
 
     # create folder if it doesn't exist
-    Path('U:\Werk\OWO\AIP\Output').mkdir(parents=True, exist_ok=True)
+    Path('U:\Werk\OWO\Output').mkdir(parents=True, exist_ok=True)
 
     # Get the data for each publication in the ISBN list
     Listsize = len(ISBN_list)
@@ -126,7 +126,7 @@ def main():
         r = requests.get(url)
         data = r.json()
         # save json file of the DMP
-        with open(f'U:\Werk\OWO\AIP\Output/'+isbn+'.json', 'w') as f:
+        with open(f'U:\Werk\OWO\Output/'+isbn+'.json', 'w') as f:
             f.write(json.dumps(data))
         size = sys.getsizeof(json.dumps(data))
         if size <= 120:
@@ -138,7 +138,7 @@ def main():
 
     # Use the downloaded json files to get publisher data for each dmp
     # Get list of all  files only in the given directory
-    path = 'U:\Werk\OWO\AIP\Output'
+    path = 'U:\Werk\OWO\Output'
 
     booklist = lambda x: os.path.isfile(os.path.join(path, x))
     books_list = filter(booklist, os.listdir(path))
@@ -176,7 +176,7 @@ def main():
     while m != bookfilenr:
         logger.debug(f'Copying and adding publisher data from ' + Booktable_list.File_name[m])
         isbn_length = Booktable_list.ISBN_length[m]
-        nf = open(f'U:\Werk\OWO\AIP\Output/{Booktable_list.File_name[m]}', 'r')
+        nf = open(f'U:\Werk\OWO\Output/{Booktable_list.File_name[m]}', 'r')
         # returns JSON object as a dictionary
         data_books = json.load(nf)
         # Create variables for DataFrame
@@ -280,7 +280,7 @@ def main():
     Publisher_Book_Table.drop(Publisher_Book_Table[Publisher_Book_Table['Original_ISBN'] != Publisher_Book_Table['ISBN']].index, inplace=True)
 
     # Export end result
-    Publisher_Book_Table.to_csv(f'U:\Werk\OWO\AIP\Output\Book_list' + runday + '.txt', sep='\t' ,encoding='utf-8')
+    Publisher_Book_Table.to_csv(f'U:\Werk\OWO\Output\Book_list' + runday + '.txt', sep='\t' ,encoding='utf-8')
 
     # Logging of script run:
     end = str(datetime.now())
