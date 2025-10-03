@@ -1,0 +1,130 @@
+# Program to get Free available Crypto coin data from CoinGecko
+# https://docs.coingecko.com/v3.0.1/reference/coins-id-history
+#
+# CoinGecko’s Public API has a rate limit of 5 to 15 calls per minute,
+# depending on usage conditions worldwide.
+# The data returned is at 00:00:00 UTC. # The last completed UTC day (00:00) is available
+# 35 minutes after midnight on the next UTC day (00:35).
+# Access to historical data via the Public API (Demo plan) is restricted to the past 365 days only.
+#
+# Author: Mark Bruyneel
+#
+# Date: 2025-09-29
+# Version: 1.0
+# Created using Python version 3.11
+#
+# Re-use note: Make sure to change folder names that are relevant to your computer
+# A config.py file needs to be created that lists the KEY . This KEY is a public key
+# which you can generate after registering at CoinGecko (for free).
+# The contents of the config.py file is just KEY = '....'
+
+import pandas as pd
+from config import KEY
+import requests
+import json
+from loguru import logger #version 0.7.2
+# Also needed to get the run time of the script
+from datetime import datetime, timedelta #version 5.5
+import time
+
+# Create year and date variable for filenames etc.
+today = datetime.now()
+year = today.strftime("%Y")
+runday = str(datetime.today().date())
+runyear = str(datetime.today().year)
+
+# Create a date + time for file logging
+now = str(datetime.now())
+nowt = time.time()
+
+# KEY in the config py file is the API Key. This way access credentials
+# are separated from the program
+pd.set_option("display.max.columns", None)
+headers = {'Accept': 'application/json',
+           'x_cg_pro_api_key': str(KEY)}
+
+# Specific API end point
+URL = 'https://api.coingecko.com/api/v3/coins/'
+
+logger.add(r'U:\Werk\financiele bestanden\Crypto\CoinGecko\CoinGecko.log', backtrace=True, diagnose=True, rotation="10 MB", retention="12 months")
+@logger.catch()
+
+def main():
+    # Parameters to be set
+    #dateq = input("For which date do you want data? ")
+    ids = input("\nWhich crypto coin do you want data for? (id example: bitcoin)")
+
+    # Create a dataframe for the data
+    Coin_data = pd.DataFrame()
+    # Iterating through the json list to get specific items
+    # First put them in item lists and then create a table by combining them
+    # In this example I have chosen to download the data for EUR
+    date_list = []
+    price_list = []
+    market_cap = []
+    total_volume = []
+    # Max. nr. of days with Public key is 365
+    start = 10
+    datenr = 0
+    try:
+        while datenr < start:
+            # Date for the all data to be retrieved (max = 365) with public / free key
+            godate = start - datenr
+            oldest = datetime.today() - timedelta(days=godate)
+            dateq = oldest.strftime("%d-%m-%Y")
+            parameters = {'date': dateq}
+            logger.debug(f'Getting data for date: {dateq}')
+            response = requests.get(URL+ids+'/history', headers=headers, params=parameters)
+            data = json.loads(response.text)
+            # In case something changes and I need to check the actual data, use this piece:
+            # with open(f'{dateq}_CryptoCoin_{ids}_example_{runday}_overview.json', 'w') as f:
+            #     f.write(json.dumps(data))
+            try:
+                # Test if the price field is missing
+                eur_price = data['market_data']['current_price']['eur']
+            except KeyError:
+                eur_price = "None"
+            try:
+                # Test if the market field is missing
+                market = data['market_data']['market_cap']['eur']
+            except KeyError:
+                market = "None"
+            try:
+                # Test if the volume field is missing
+                volume = data['market_data']['total_volume']['eur']
+            except KeyError:
+                volume = "None"
+            date_list.append(dateq)
+            price_list.append(eur_price)
+            market_cap.append(market)
+            total_volume.append(volume)
+            datenr = datenr + 1
+            # Delay in calls/requests to avoid problems with API
+            time.sleep(25)
+        # Create table out of lists
+        data_table = {'Date': date_list}
+        temp_table = pd.DataFrame(data_table)
+        temp_table['Eur_Price'] = price_list
+        temp_table['Market_Cap'] = market_cap
+        temp_table['Volume'] = total_volume
+        Coin_data = pd.concat([Coin_data, temp_table], ignore_index=True)
+        Coin_data.to_csv(f'U:\Werk\\financiele bestanden\Crypto\CoinGecko\\{ids}_' + runday + '.txt', sep='\t', encoding='utf-8')
+    except (requests.ConnectionError, requests.ConnectTimeout, requests.TooManyRedirects) as err:
+        print(err)
+
+    # Logging of script run:
+    end = str(datetime.now())
+    logger.debug('Processing started at: ' + now)
+    logger.debug('Processing completed at: ' + end)
+    duration_s = (round((time.time() - nowt), 2))
+    if duration_s > 3600:
+        duration = str(duration_s / 3600)
+        logger.debug('Search took: ' + duration + ' hours.')
+    elif duration_s > 60:
+        duration = str(duration_s / 60)
+        logger.debug('Search took: ' + duration + ' minutes.')
+    else:
+        duration = str(duration_s)
+        logger.debug('Search took: ' + duration + ' seconds.')
+if __name__ == "__main__":
+    main()
