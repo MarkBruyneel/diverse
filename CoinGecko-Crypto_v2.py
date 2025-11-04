@@ -9,8 +9,8 @@
 #
 # Author: Mark Bruyneel
 #
-# Date: 2025-10-04
-# Version: 1.1
+# Date: 2025-10-23
+# Version: 1.2
 # Created using Python version 3.11
 #
 # Re-use note: Make sure to change folder names that are relevant to your computer
@@ -26,6 +26,7 @@ from loguru import logger #version 0.7.2
 # Also needed to get the run time of the script
 from datetime import datetime, timedelta #version 5.5
 import time
+from pathlib import Path
 
 # Create year and date variable for filenames etc.
 today = datetime.now()
@@ -65,6 +66,18 @@ def main():
             continue
         else:
             print('Please enter a valid 3-digit ISO currency which is covered at CoinGecko.')
+    # Indicate the number of days for the download. Max for free data is 365
+    # Check the input is a valid number as well to avoid problems
+    choice_days = None
+    while choice_days == None:
+        try:
+            choice_days = int(input('\nHow many days do you want data for? (max = 365, min = 1)'))
+            if choice_days <= 0 or choice_days > 365:
+                print('\nPlease enter a valid number of days between 1 and 365.')
+        except ValueError:
+            print('\nPlease enter an integer/number please.')
+    # Create a path for the data
+    Path(f"U:\Werk\\financiele bestanden\Crypto\CoinGecko/{ids}").mkdir(parents=True, exist_ok=True)
     # Create a dataframe for the data
     Coin_data = pd.DataFrame()
     # Iterating through the json list to get specific items
@@ -74,7 +87,7 @@ def main():
     market_cap = []
     total_volume = []
     # Max. nr. of days with Public key is 365
-    start = 10
+    start = choice_days
     datenr = 0
     try:
         while datenr < start:
@@ -83,12 +96,12 @@ def main():
             oldest = datetime.today() - timedelta(days=godate)
             dateq = oldest.strftime("%d-%m-%Y")
             parameters = {'date': dateq}
-            logger.debug(f'Getting data for date: {dateq}')
+            logger.debug(f'Getting {ids} data for date: {dateq}')
             response = requests.get(URL+ids+'/history', headers=headers, params=parameters)
             data = json.loads(response.text)
             # In case something changes and I need to check the actual data, use this piece:
-            # with open(f'{dateq}_CryptoCoin_{ids}_example_{runday}_overview.json', 'w') as f:
-            #     f.write(json.dumps(data))
+            with open(f'U:\Werk\\financiele bestanden\Crypto\CoinGecko/{ids}/{dateq}_CryptoCoin_{ids}.json', 'w') as f:
+                f.write(json.dumps(data))
             try:
                 # Test if the price field is missing
                 curr_price = data['market_data']['current_price'][curr_choice]
@@ -118,7 +131,7 @@ def main():
         temp_table['Market_Cap'] = market_cap
         temp_table['Volume'] = total_volume
         Coin_data = pd.concat([Coin_data, temp_table], ignore_index=True)
-        Coin_data.to_csv(f'U:\Werk\\financiele bestanden\Crypto\CoinGecko\\{ids}_' + runday + '.txt', sep='\t', encoding='utf-8')
+        Coin_data.to_csv(f'U:\Werk\\financiele bestanden\Crypto\CoinGecko/{ids}/{ids}_' + runday + '.txt', sep='\t', encoding='utf-8')
     except (requests.ConnectionError, requests.ConnectTimeout, requests.TooManyRedirects) as err:
         print(err)
 
