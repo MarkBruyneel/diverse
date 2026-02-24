@@ -15,3 +15,5 @@ The fourth script can be used to collect ISBN book numbers from an Excel file an
 The Fifth script makes it possible to automatically search for top 10 Google search results using an Excel file as input. The Excel file should contain a column with (in each cell) a list of keywords or search terms. To avoid Google considering the program to be a bot, I built in a random number of seconds between searches. Warning: the program uses a Google-search library that uses a Python resource that is deprecated in Python 3.12 and higher.  
 
 The Sixth script is an example script that allows you to download (freely) up to 365 days of EUR exchange rate data for crypto coins that are available through CoinGecko. You need to register first, create your public API Key and then set up a config.py file with that Key. The seventh script is a version that allows you to choose a currency.
+
+The seventh script allows you to convert six or eight digit Cusip codes to the full nine digit codes. It convert infividual codes or can use a text file as input to convert. See also for background information: https://en.wikipedia.org/wiki/CUSIP
